@@ -60,7 +60,7 @@ public class Exercise4Test extends ClassicOnlineStore {
          * Confirm that none of the customer has empty list for their {@link Customer.wantToBuy}
          * by using {@link Stream#noneMatch}
          */
-        boolean everyoneWantsSomething = customerList.stream().noneMatch(c->c.getWantToBuy().isEmpty());
+        boolean everyoneWantsSomething = customerList.stream().noneMatch(c -> c.getWantToBuy().isEmpty());
 
         assertThat(everyoneWantsSomething, is(true));
     }
