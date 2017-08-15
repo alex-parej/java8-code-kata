@@ -5,6 +5,7 @@ import common.test.tool.annotation.Easy;
 import common.test.tool.dataset.ClassicOnlineStore;
 import common.test.tool.entity.Customer;
 import common.test.tool.util.CollectorImpl;
+import java.util.ArrayList;
 
 import org.junit.Test;
 
@@ -34,10 +35,22 @@ public class Exercise9Test extends ClassicOnlineStore {
          * Implement a {@link Collector} which can create a String with comma separated names shown in the assertion.
          * The collector will be used by serial stream.
          */
-        Supplier<Object> supplier = null;
-        BiConsumer<Object, String> accumulator = null;
-        BinaryOperator<Object> combiner = null;
-        Function<Object, String> finisher = null;
+        Supplier<StringBuilder> supplier = StringBuilder::new;
+        BiConsumer<StringBuilder, String> accumulator = (sb, newString) -> {
+            sb.append(",");
+            sb.append(newString);
+        };
+        BinaryOperator<StringBuilder> combiner = (left, right) -> {
+            left.append(",");
+            left.append(right);
+            return left;
+        };
+        Function<StringBuilder, String> finisher = sb -> {
+            if(sb.length()>0){
+               return sb.substring(1);
+            }
+            return sb.toString();
+        };
 
         Collector<String, ?, String> toCsv =
             new CollectorImpl<>(supplier, accumulator, combiner, finisher, Collections.emptySet());
