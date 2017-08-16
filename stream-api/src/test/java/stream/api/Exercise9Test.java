@@ -4,6 +4,7 @@ import common.test.tool.annotation.Difficult;
 import common.test.tool.annotation.Easy;
 import common.test.tool.dataset.ClassicOnlineStore;
 import common.test.tool.entity.Customer;
+import common.test.tool.entity.Item;
 import common.test.tool.util.CollectorImpl;
 import java.util.ArrayList;
 
@@ -12,9 +13,12 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -67,10 +71,22 @@ public class Exercise9Test extends ClassicOnlineStore {
          * values as {@link Set} of customers who are wanting to buy that item.
          * The collector will be used by parallel stream.
          */
-        Supplier<Object> supplier = null;
-        BiConsumer<Object, Customer> accumulator = null;
-        BinaryOperator<Object> combiner = null;
-        Function<Object, Map<String, Set<String>>> finisher = null;
+        Supplier<Map<String, Set<String>>> supplier = ConcurrentHashMap::new;
+        BiConsumer<Map<String, Set<String>>, Customer> accumulator = (container, customer) -> {
+            customer.getWantToBuy().stream().map(Item::getName).forEach(
+                    itemName -> {
+                        container.putIfAbsent(itemName, Collections.synchronizedSet(new HashSet<>()));
+                        Set<String> customers = container.get(itemName);
+                        customers.add(customer.getName());
+                    });
+        };
+        BinaryOperator<Map<String, Set<String>>> combiner = (left, right) -> {
+            right.forEach((key,value)->{
+                left.merge(key, value, (v1,v2)->{v1.addAll(v2);return v1;});
+            });
+            return left;
+        };
+        Function<Map<String, Set<String>>, Map<String, Set<String>>> finisher = (a)->a;
 
         Collector<Customer, ?, Map<String, Set<String>>> toItemAsKey =
             new CollectorImpl<>(supplier, accumulator, combiner, finisher, EnumSet.of(
